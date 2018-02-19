@@ -178,7 +178,5 @@ public:
         }
         if(bracket_counter == 0)
             flush(commands);
-        else
-            commands.clear();
     }
 };
