@@ -86,7 +86,14 @@ public:
         _close_called = true;
     }
 
-    FileWriterMock() : _open_called(false), _close_called(false) {}
+    FileWriterMock() : _name(""), _open_called(false), _close_called(false) {}
+
+    void clear() {
+        _out.str("");
+        _name.clear();
+        _open_called = false;
+        _close_called = false;
+    }
 };
 
 BOOST_AUTO_TEST_CASE( test_file_print )
@@ -104,8 +111,31 @@ BOOST_AUTO_TEST_CASE( test_file_print )
     ps.process(commands);
 
     BOOST_CHECK(fwm->_open_called);
-    BOOST_CHECK(fwm->_name == "bulk1.log");
+    BOOST_CHECK(fwm->_name == "bulk1-0.log");
     BOOST_CHECK(fwm->_out.str() == "1\n2\n3\n");
+    BOOST_CHECK(fwm->_close_called);
+
+    fwm->clear();
+
+    ps.process(commands);
+
+    BOOST_CHECK(fwm->_open_called);
+    BOOST_CHECK(fwm->_name == "bulk1-1.log");
+    BOOST_CHECK(fwm->_out.str() == "1\n2\n3\n");
+    BOOST_CHECK(fwm->_close_called);
+
+    fwm->clear();
+
+    commands.clear();
+    commands.push_back(std::make_tuple(4, "4"));
+    commands.push_back(std::make_tuple(5, "5"));
+    commands.push_back(std::make_tuple(6, "6"));
+
+    ps.process(commands);
+
+    BOOST_CHECK(fwm->_open_called);
+    BOOST_CHECK(fwm->_name == "bulk4-0.log");
+    BOOST_CHECK(fwm->_out.str() == "4\n5\n6\n");
     BOOST_CHECK(fwm->_close_called);
 }
 

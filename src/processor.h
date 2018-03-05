@@ -6,6 +6,7 @@
 #include <fstream>
 #include <ctime>
 #include <tuple>
+#include <map>
 
 #include <boost/lexical_cast.hpp>
 
@@ -96,6 +97,7 @@ class FilePrint : public Processor
 {
 private:
     IFileWriter* _file_writer;
+    std::map<time_t, size_t> _log_counter;
 
 public:
     FilePrint(ProcessorSubscriber& ps, IFileWriter* file_writer = new FileWriter) : _file_writer(file_writer)
@@ -112,10 +114,20 @@ public:
             return;
 
         std::string name = "bulk";
-        name += boost::lexical_cast<std::string>(std::get<0>(*(commands.begin())));
-        name += ".log";
+        time_t tm = std::get<0>(*(commands.begin()));
+        name += boost::lexical_cast<std::string>(tm);
+        name += "-";
 
-        _file_writer->open(name);
+        size_t log_counter = 0;
+        auto it_cnt = _log_counter.find(tm);
+        if(it_cnt != _log_counter.end())
+            log_counter = ++(it_cnt->second);
+        else
+            _log_counter[tm] = log_counter;
+
+        std::string cnt = boost::lexical_cast<std::string>(log_counter);
+
+        _file_writer->open(name + cnt + ".log");
         for(auto c :commands)
             _file_writer->out() << std::get<1>(c) << std::endl;
         _file_writer->close();
